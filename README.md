@@ -1,51 +1,28 @@
-# [Your site's title]
-
-## Start here (delete this section before you submit)
-
-This repository is your starting point for the Home Sales case. It already holds the dataset, its description sheet, project instructions for your AI coding agent, and outlines of the README and agent log that the case asks for.
-
-1. **Turn on GitHub Pages.** In this repository, open **Settings**, then **Pages**. Under "Build and deployment," set **Source** to **GitHub Actions**. GitHub may suggest workflows to add. Skip them: this repository already has one, `.github/workflows/pages.yml`.
-2. **Publish for the first time.** Open the **Actions** tab, choose **Publish site to GitHub Pages** in the sidebar, click **Run workflow**, then click **Run workflow** again to confirm. If the tab already shows a failed run from when you created the repository, that's expected: Pages wasn't turned on yet. When the new run shows a green check, your site is at `https://your-username.github.io/your-repo-name/`. It shows a placeholder page until you replace `index.html`.
-
-    From then on, every push to the main branch publishes the site within a few minutes. If the live site doesn't show a change, open the **Actions** tab. A red X means the publish failed, and the run's log says why.
-3. **Open the repository in your AI coding agent.** Its project instructions are in `AGENTS.md`. If your agent reads its instructions from a file with a different name, check its documentation and copy `AGENTS.md` to that name. Add to the instructions as you learn what your agent needs.
-4. **Read `docs/data_description_sheet.md`** before you ask the agent for any analysis.
-5. **Build in small steps,** as the setup guide describes. Add an entry to `AGENT_LOG.md` each time you work with the agent.
-6. **Fill in every section below** before you submit.
-
-| Path | What it is |
-|---|---|
-| `index.html` | A placeholder page. Replace it with your site. |
-| `data/college_town_home_sales.csv` | The dataset, version 1.0: 35,442 rows. Your site reads this file. |
-| `data/college_town_home_sales.xlsx`, `.sqlite`, `.duckdb`, `.parquet` | The same data in Excel, SQLite, DuckDB and Parquet formats, with identical values |
-| `docs/data_description_sheet.md` | What every column means, and five problems in the data |
-| `AGENTS.md` | Project instructions for your AI coding agent |
-| `AGENT_LOG.md` | Your agent log |
-| `scripts/` | Scripts that make smaller data files for the site |
-| `.github/workflows/pages.yml` | Publishes the site to GitHub Pages each time you push to main. It publishes your files as they are. If you switch to a framework that needs a build step, have your agent update it. |
-
-Don't edit any of the five dataset files. Your site needs only the CSV file. The other formats make it easier to check numbers a second way, for example with a pivot table in Excel or a SQL query on the SQLite file. In SQLite and DuckDB, the table is named `home_sales`.
+# Median home sale price by city
 
 ## What this site is for
 
-_Replace this line with your site's question and audience, or a short description of the site._
+Which of the 18 college-town cities has the highest and lowest typical home price? The site is a single page that shows the median sale price for each city, ranked from highest to lowest, with the number of sales counted and a small bar for each. It is for students, parents and anyone comparing housing costs in college towns.
 
 ## Live site
 
-https://your-username.github.io/your-repo-name/
+https://yuhanorv.github.io/bdi475-website-project/
 
 ## Data notes
 
-_Replace this line. Say which rows you left out and why, and how each figure on the site is defined. "Five things that will bite you" in the description sheet lists the problems to cover._
+- **Rows left out:** the 40 sales under $10,000 (including one at $0). Prices that low are not plausible home prices, so every figure on the site leaves them out. The other 35,402 of the 35,442 rows are counted, in 18 cities. The $10,000 rule is stated on the page. The description sheet's own medians use a $1,000 cutoff, so a few differ slightly (for example Ann Arbor is $572,000 here and $571,000 there).
+- **Median sale price:** the middle `sale_price` of a city's counted sales, computed in the browser from `data/college_town_home_sales.csv`. When a city has an even number of sales, the median is the average of the two middle prices. Nothing is estimated or typed in by hand.
+- **High prices:** 31 sales are over $5,000,000, up to $81,510,000. They are kept, because a median is barely moved by a few very high values.
+- **Duplicate addresses:** rows are never removed for sharing a street address. 66 rows share one, mostly separate condo units in State College, and each is a real sale.
+- **Small places:** Savoy (247 sales), Carrboro (205), Newberry (152) and Pittsboro (92) have fewer sales than the 14 main college towns, so their medians are less reliable. They are ranked together with the others.
+- **Columns not used:** `home_type`, the three date columns, `living_area_sqft` and the lot size are not used, so the problems with those columns do not affect any figure.
 
 ## Tools we used
 
-_Replace this line with your AI coding agent or agents, and any libraries and other tools you used._
+- Claude Code (web), with the Claude Sonnet 5.5 model, wrote the page and this README.
+- Plain HTML, CSS and JavaScript, with no libraries. The page reads the CSV file in the browser.
+- GitHub, GitHub Pages and GitHub Actions publish the site.
 
 ## Citation
 
 College-town home sales dataset, version 1.0 (2026). University of Illinois-Deloitte Foundation Center for Business Emerging Technologies. Data collected March 2026.
-
-## Who did what
-
-_For teams: replace this line with each member's name and what they did. If you worked alone, delete this section._
