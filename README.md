@@ -26,7 +26,3 @@ https://yuhanorv.github.io/bdi475-website-project/
 ## Citation
 
 College-town home sales dataset, version 1.0 (2026). University of Illinois-Deloitte Foundation Center for Business Emerging Technologies. Data collected March 2026.
-
-## Who did what
-
-_For teams: replace this line with each member's name and what they did. If you worked alone, delete this section._
