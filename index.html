@@ -1,31 +1,130 @@
 <!DOCTYPE html>
-<!-- A placeholder from the Home Sales template. Replace this file with your site's first page. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Under construction</title>
+  <title>Median home sale price by city</title>
   <!-- An empty icon, so the browser doesn't log an error looking for favicon.ico -->
   <link rel="icon" href="data:,">
   <style>
-    :root { color-scheme: light dark; }
+    :root { color-scheme: light dark; --line: #8884; --bar: #2f6fb0; }
     body {
-      max-width: 40rem;
+      max-width: 44rem;
       margin: 0 auto;
-      padding: 3rem 1rem;
+      padding: 2rem 1rem 3rem;
       font-family: system-ui, sans-serif;
       line-height: 1.5;
     }
+    h1 { margin-bottom: 0.25rem; }
+    .rule { padding: 0.75rem 1rem; border-left: 4px solid var(--bar); background: #8881; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+    th, td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--line); text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    .bar { width: 35%; padding-left: 0; }
+    .bar span { display: block; height: 0.9rem; background: var(--bar); border-radius: 2px; }
+    caption { text-align: left; font-weight: 600; padding-bottom: 0.25rem; }
     footer { margin-top: 3rem; font-size: 0.875rem; opacity: 0.75; }
+    @media (max-width: 36rem) { .bar { display: none; } }
   </style>
 </head>
 <body>
   <main>
-    <h1>This site is under construction</h1>
-    <p>It will show findings from the College-town home sales dataset.</p>
+    <h1>Median home sale price by city</h1>
+    <p>College-town home sales, data collected March 2026.</p>
+    <p class="rule"><strong>Rule:</strong> sales under $10,000 are left out, because prices that low
+      (including a $0 sale) are not plausible home prices. Every other sale is counted.</p>
+    <p id="status">Loading data…</p>
+    <table id="results" hidden>
+      <caption>Cities sorted from highest to lowest median</caption>
+      <thead>
+        <tr><th>City</th><th>Median sale price</th><th>Sales counted</th><th class="bar" aria-hidden="true"></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="summary"></p>
   </main>
   <footer>
     <p>Data: College-town home sales dataset, version 1.0 (2026). University of Illinois-Deloitte Foundation Center for Business Emerging Technologies. Data collected March 2026.</p>
   </footer>
+
+  <script>
+    const MIN_PRICE = 10000;
+
+    // Minimal CSV parser that handles quoted fields; every value stays text.
+    function parseCsv(text) {
+      const rows = [];
+      let row = [], field = "", inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+          } else { field += c; }
+        } else if (c === '"') { inQuotes = true; }
+        else if (c === ",") { row.push(field); field = ""; }
+        else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+        else if (c !== "\r") { field += c; }
+      }
+      if (field !== "" || row.length) { row.push(field); rows.push(row); }
+      return rows;
+    }
+
+    function median(sorted) {
+      const n = sorted.length, mid = n >> 1;
+      return n % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const num = new Intl.NumberFormat("en-US");
+
+    async function main() {
+      const status = document.getElementById("status");
+      try {
+        const response = await fetch("data/college_town_home_sales.csv");
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const rows = parseCsv(await response.text());
+        const header = rows.shift();
+        const iCity = header.indexOf("city"), iState = header.indexOf("state"), iPrice = header.indexOf("sale_price");
+
+        const byCity = new Map();
+        let total = 0, excluded = 0;
+        for (const r of rows) {
+          if (r.length < header.length) continue;
+          total++;
+          const price = Number(r[iPrice]);
+          if (!(price >= MIN_PRICE)) { excluded++; continue; }
+          const key = r[iCity] + ", " + r[iState];
+          if (!byCity.has(key)) byCity.set(key, []);
+          byCity.get(key).push(price);
+        }
+
+        const results = [...byCity].map(([city, prices]) => {
+          prices.sort((a, b) => a - b);
+          return { city, count: prices.length, median: median(prices) };
+        }).sort((a, b) => b.median - a.median);
+
+        const max = results[0].median;
+        const tbody = document.querySelector("#results tbody");
+        for (const r of results) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = "<td></td><td></td><td></td><td class='bar' aria-hidden='true'><span></span></td>";
+          tr.children[0].textContent = r.city;
+          tr.children[1].textContent = money.format(r.median);
+          tr.children[2].textContent = num.format(r.count);
+          tr.querySelector("span").style.width = (100 * r.median / max) + "%";
+          tbody.appendChild(tr);
+        }
+        document.getElementById("results").hidden = false;
+        status.hidden = true;
+        document.getElementById("summary").textContent =
+          num.format(total) + " sales in the file; " + num.format(excluded) +
+          " under $10,000 left out; " + num.format(total - excluded) + " counted across " +
+          results.length + " cities.";
+      } catch (err) {
+        status.textContent = "Could not load the data: " + err.message;
+      }
+    }
+    main();
+  </script>
 </body>
 </html>
